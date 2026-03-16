@@ -1,0 +1,22 @@
+[package]
+name = "monarch"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+limine = "0.5"
+
+[dev-dependencies]
+
+[profile.release]
+opt-level = 3
+lto = true
+strip = true
+panic = "abort"
+
+[profile.dev]
+panic = "abort"
+
+[[bin]]
+name = "kernel"
+path = "src/main.rs"
