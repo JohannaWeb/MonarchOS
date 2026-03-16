@@ -74,7 +74,7 @@ make test        # Run tests
 
 ## Project Status
 
-### ✅ Implemented
+### Implemented
 - Bootloader integration via limine protocol
 - Kernel entry point and basic initialization
 - Memory map detection from bootloader
@@ -84,7 +84,7 @@ make test        # Run tests
 - Proper bare-metal configuration (no_std, panic=abort)
 - Compiler intrinsics (memcpy, memset, memcmp, memmove)
 
-### 📋 In Progress / TODO
+### In Progress / TODO
 - [ ] **GDT Setup**: Configure Global Descriptor Table for privilege levels
 - [ ] **IDT Implementation**: Interrupt and exception handling
 - [ ] **Paging**: Virtual memory management with page tables
