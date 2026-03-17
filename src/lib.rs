@@ -1,5 +1,6 @@
 #![no_std]
 
+pub mod boot_info;
 pub mod arch;
 pub mod memory;
 pub mod process;

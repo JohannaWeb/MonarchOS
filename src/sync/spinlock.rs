@@ -46,3 +46,6 @@ impl<T> Drop for SpinlockGuard<'_, T> {
         self.lock.locked.store(false, Ordering::Release);
     }
 }
+
+unsafe impl<T: Send> Send for Spinlock<T> {}
+unsafe impl<T: Send> Sync for Spinlock<T> {}

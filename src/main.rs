@@ -4,7 +4,7 @@
 #![feature(lang_items)]
 
 use core::panic::PanicInfo;
-use limine::request::{FramebufferRequest, MemoryMapRequest, RsdpRequest};
+use limine::request::{FramebufferRequest, MemoryMapRequest, RsdpRequest, HhdmRequest, ExecutableAddressRequest};
 
 // Provide compiler intrinsics for bare-metal
 #[no_mangle]
@@ -58,8 +58,30 @@ static MEMORY_MAP_REQUEST: MemoryMapRequest = MemoryMapRequest::new();
 #[used]
 static RSDP_REQUEST: RsdpRequest = RsdpRequest::new();
 
+#[used]
+static HHDM_REQUEST: HhdmRequest = HhdmRequest::new();
+
+#[used]
+static EXECUTABLE_ADDRESS_REQUEST: ExecutableAddressRequest = ExecutableAddressRequest::new();
+
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
+    // Set up boot info before initializing kernel
+    let hhdm_offset = HHDM_REQUEST.get_response().expect("no HHDM").offset();
+    let exec = EXECUTABLE_ADDRESS_REQUEST.get_response().expect("no ExecutableAddress");
+    let mmap = MEMORY_MAP_REQUEST.get_response().expect("no MemoryMap").entries();
+    unsafe {
+        monarch::boot_info::set(monarch::boot_info::BootInfo {
+            hhdm_offset,
+            kernel_phys_base: exec.physical_base(),
+            kernel_virt_base: exec.virtual_base(),
+            memory_map: mmap,
+        });
+    }
+
+    // Initialize CPU (GDT, IDT, exception handling)
+    monarch::init();
+
     // Get framebuffer for early output
     if let Some(response) = FRAMEBUFFER_REQUEST.get_response() {
         if let Some(fb) = response.framebuffers().next() {

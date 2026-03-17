@@ -4,6 +4,7 @@ ENTRY(_start)
 
 SECTIONS {
     . = 0xFFFFFFFF80000000;
+    __kernel_start = .;
 
     .text : AT(ADDR(.text) - 0xFFFFFFFF80000000) {
         *(.text .text.*)
@@ -25,4 +26,6 @@ SECTIONS {
         *(COMMON)
         . = ALIGN(4K);
     }
+
+    __kernel_end = ALIGN(4K);
 }
