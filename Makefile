@@ -4,7 +4,7 @@ ARCH ?= x86_64
 LIMINE_VERSION ?= v7.8.1
 
 build:
-	cargo build --release -Z build-std=core,compiler_builtins -Z build-std-features=compiler-builtins-mem
+	cargo build --release -Z build-std=core,compiler_builtins,alloc -Z build-std-features=compiler-builtins-mem
 
 run: build
 	@echo "Running in QEMU (requires QEMU to be installed)"

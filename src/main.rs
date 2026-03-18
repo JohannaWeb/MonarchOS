@@ -3,6 +3,8 @@
 #![allow(internal_features)]
 #![feature(lang_items)]
 
+extern crate alloc;
+
 use core::panic::PanicInfo;
 use limine::request::{FramebufferRequest, MemoryMapRequest, RsdpRequest, HhdmRequest, ExecutableAddressRequest};
 
@@ -81,6 +83,24 @@ pub extern "C" fn _start() -> ! {
 
     // Initialize CPU (GDT, IDT, exception handling)
     monarch::init();
+
+    // Test heap allocator
+    {
+        use alloc::boxed::Box;
+        use alloc::vec::Vec;
+
+        // Test Box allocation
+        let _boxed = Box::new(42u32);
+
+        // Test Vec allocation
+        let mut vec = Vec::new();
+        for i in 0..1000u64 {
+            vec.push(i);
+        }
+
+        // Just ensure we can read from the vec
+        let _first = vec[0];
+    }
 
     // Get framebuffer for early output
     if let Some(response) = FRAMEBUFFER_REQUEST.get_response() {
