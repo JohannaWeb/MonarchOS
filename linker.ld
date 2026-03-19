@@ -1,42 +1,53 @@
-/* Kernel linker script for x86_64 */
+/* Kernel linker script for x86_64 with Multiboot2 support */
 
 ENTRY(_start)
 
 SECTIONS {
-    . = 0xFFFFFFFF80000000;
+    . = 0x100000;
     __kernel_start = .;
 
-    .limine_requests_start ALIGN(8) : AT(ADDR(.limine_requests_start) - 0xFFFFFFFF80000000) {
-        KEEP(*(.limine_requests_start))
+    /* Multiboot2 header must be in first 32KB */
+    .multiboot_header : {
+        KEEP(*(.multiboot_header))
     }
 
-    .limine_requests ALIGN(8) : AT(ADDR(.limine_requests) - 0xFFFFFFFF80000000) {
-        KEEP(*(.limine_requests))
+    /* PVH note for QEMU */
+    .note.pvh : {
+        KEEP(*(.note.pvh))
     }
 
-    .limine_requests_end ALIGN(8) : AT(ADDR(.limine_requests_end) - 0xFFFFFFFF80000000) {
-        KEEP(*(.limine_requests_end))
-    }
-
-    .text : AT(ADDR(.text) - 0xFFFFFFFF80000000) {
+    .text : {
         *(.text .text.*)
         . = ALIGN(4K);
     }
 
-    .rodata : AT(ADDR(.rodata) - 0xFFFFFFFF80000000) {
+    .rodata : {
         *(.rodata .rodata.*)
         . = ALIGN(4K);
     }
 
-    .data : AT(ADDR(.data) - 0xFFFFFFFF80000000) {
+    .data : {
         *(.data .data.*)
         . = ALIGN(4K);
     }
 
-    .bss : AT(ADDR(.bss) - 0xFFFFFFFF80000000) {
+    .bss : {
         *(.bss .bss.*)
         *(COMMON)
         . = ALIGN(4K);
+    }
+
+    /* Limine sections (if using limine bootloader) */
+    .limine_requests_start ALIGN(8) : {
+        KEEP(*(.limine_requests_start))
+    }
+
+    .limine_requests ALIGN(8) : {
+        KEEP(*(.limine_requests))
+    }
+
+    .limine_requests_end ALIGN(8) : {
+        KEEP(*(.limine_requests_end))
     }
 
     __kernel_end = ALIGN(4K);
