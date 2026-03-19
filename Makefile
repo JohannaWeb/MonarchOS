@@ -1,26 +1,52 @@
-.PHONY: build run clean test
+.PHONY: build run run-gui clean test check clippy fmt fmt-check help limine-bootloader iso
 
 ARCH ?= x86_64
-LIMINE_VERSION ?= v7.8.1
+LIMINE_VERSION ?= v7.x-binary
 
 build:
 	cargo build --release -Z build-std=core,compiler_builtins,alloc -Z build-std-features=compiler-builtins-mem
 
-run: build
+limine-bootloader:
+	@if [ ! -d "limine" ]; then \
+		git clone https://github.com/limine-bootloader/limine.git --branch $(LIMINE_VERSION) --depth=1; \
+		cd limine && $(MAKE); \
+	else \
+		echo "Limine bootloader already present"; \
+	fi
+
+iso: build limine-bootloader
+	@mkdir -p iso_root/boot/limine
+	@mkdir -p iso_root/EFI/BOOT
+	@cp limine.conf iso_root/
+	@cp limine/limine-bios.sys iso_root/boot/limine/
+	@cp limine/limine-bios-cd.bin iso_root/boot/limine/
+	@cp limine/limine-uefi-cd.bin iso_root/boot/limine/
+	@cp target/x86_64-unknown-none/release/kernel iso_root/boot/kernel
+	@cp limine/BOOTX64.EFI iso_root/EFI/BOOT/
+	@xorriso -as mkisofs \
+		-b boot/limine/limine-bios-cd.bin \
+		-no-emul-boot -boot-load-size 4 -boot-info-table \
+		--efi-boot boot/limine/limine-uefi-cd.bin \
+		-efi-boot-part --efi-boot-image --protective-msdos-label \
+		iso_root -o kernel.iso
+	@./limine/limine bios-install kernel.iso
+	@echo "ISO built successfully: kernel.iso"
+
+run: iso
 	@echo "Running in QEMU (requires QEMU to be installed)"
-	qemu-system-x86_64 -kernel target/x86_64-unknown-none/release/kernel \
+	qemu-system-x86_64 -cdrom kernel.iso \
 		-m 512M \
 		-serial stdio \
 		-display none
 
-run-gui: build
-	qemu-system-x86_64 -kernel target/x86_64-unknown-none/release/kernel \
+run-gui: iso
+	qemu-system-x86_64 -cdrom kernel.iso \
 		-m 512M \
 		-serial stdio
 
 clean:
 	cargo clean
-	rm -rf target/
+	rm -rf target/ iso_root/ kernel.iso limine/
 
 test:
 	cargo test

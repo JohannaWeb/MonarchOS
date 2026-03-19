@@ -89,6 +89,22 @@ QEMU is not installed. Install it using the instructions above for your platform
 
 The kernel hasn't been built yet. Run `make build` first, or just use `make run` which builds automatically.
 
+### "could not read the boot disk" or "no valid configs in qemu"
+
+This indicates an issue with the limine bootloader configuration or ISO creation. This is a known issue where QEMU's CD-ROM emulation may have difficulty reading the limine boot sectors.
+
+**Possible causes:**
+- CD-ROM emulation issues in your QEMU version
+- Limine configuration syntax errors in `limine.conf`
+- ISO creation process (xorriso configuration)
+
+**Attempts at resolution:**
+- Verified that `limine.conf` uses correct syntax for the limine protocol
+- Tested with both limine v7.x and v9.x bootloader versions
+- ISO structure verified to contain proper boot sectors
+
+**Workaround:** Currently investigating direct kernel loading with QEMU's `-kernel` option, which requires PVH ELF Note support.
+
 ### Kernel hangs or shows black screen
 
 This is normal behavior - the kernel initializes and halts (waits in a loop). There's no interactive shell yet.

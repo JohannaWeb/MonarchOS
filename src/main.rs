@@ -6,7 +6,8 @@
 extern crate alloc;
 
 use core::panic::PanicInfo;
-use limine::request::{FramebufferRequest, MemoryMapRequest, RsdpRequest, HhdmRequest, ExecutableAddressRequest};
+use limine::request::{FramebufferRequest, MemoryMapRequest, RsdpRequest, HhdmRequest, ExecutableAddressRequest, RequestsStartMarker, RequestsEndMarker};
+use limine::BaseRevision;
 
 // Provide compiler intrinsics for bare-metal
 #[no_mangle]
@@ -65,6 +66,18 @@ static HHDM_REQUEST: HhdmRequest = HhdmRequest::new();
 
 #[used]
 static EXECUTABLE_ADDRESS_REQUEST: ExecutableAddressRequest = ExecutableAddressRequest::new();
+
+#[used]
+#[link_section = ".limine_requests_start"]
+static _REQUESTS_START: RequestsStartMarker = RequestsStartMarker::new();
+
+#[used]
+#[link_section = ".limine_requests"]
+static BASE_REVISION: BaseRevision = BaseRevision::new();
+
+#[used]
+#[link_section = ".limine_requests_end"]
+static _REQUESTS_END: RequestsEndMarker = RequestsEndMarker::new();
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
