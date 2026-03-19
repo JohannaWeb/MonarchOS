@@ -1,6 +1,6 @@
 [build]
 target = "x86_64-unknown-none"
-rustflags = ["-C", "link-args=-T linker.ld", "-C", "link-args=--nmagic", "-C", "relocation-model=static"]
+rustflags = ["-C", "link-args=-T linker.ld", "-C", "link-args=-pie"]
 
 [unstable]
 build-std = ["core", "compiler_builtins", "alloc"]

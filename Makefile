@@ -32,26 +32,14 @@ iso: build limine-bootloader
 	@./limine/limine bios-install kernel.iso
 	@echo "ISO built successfully: kernel.iso"
 
-run: build
-	@echo "Running in QEMU with multiboot loader"
-	qemu-system-x86_64 -kernel target/x86_64-unknown-none/release/kernel \
-		-m 512M \
-		-serial stdio \
-		-display none
-
-run-gui: build
-	qemu-system-x86_64 -kernel target/x86_64-unknown-none/release/kernel \
-		-m 512M \
-		-serial stdio
-
-run-iso: iso
-	@echo "Running with ISO/limine bootloader (may not work on all systems)"
+run: iso
+	@echo "Running in QEMU (requires QEMU to be installed)"
 	qemu-system-x86_64 -cdrom kernel.iso \
 		-m 512M \
 		-serial stdio \
 		-display none
 
-run-gui-iso: iso
+run-gui: iso
 	qemu-system-x86_64 -cdrom kernel.iso \
 		-m 512M \
 		-serial stdio
