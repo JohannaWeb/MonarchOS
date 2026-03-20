@@ -17,7 +17,7 @@ limine-bootloader:
 iso: build limine-bootloader
 	@mkdir -p iso_root/boot/limine
 	@mkdir -p iso_root/EFI/BOOT
-	@cp limine.conf iso_root/
+	@cp limine.cfg iso_root/
 	@cp limine/limine-bios.sys iso_root/boot/limine/
 	@cp limine/limine-bios-cd.bin iso_root/boot/limine/
 	@cp limine/limine-uefi-cd.bin iso_root/boot/limine/

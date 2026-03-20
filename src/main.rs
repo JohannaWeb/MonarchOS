@@ -6,7 +6,10 @@
 extern crate alloc;
 
 use core::panic::PanicInfo;
-use limine::request::{FramebufferRequest, MemoryMapRequest, RsdpRequest, HhdmRequest, ExecutableAddressRequest, RequestsStartMarker, RequestsEndMarker};
+use limine::request::{
+    ExecutableAddressRequest, FramebufferRequest, HhdmRequest, MemoryMapRequest, RequestsEndMarker,
+    RequestsStartMarker, RsdpRequest,
+};
 use limine::BaseRevision;
 
 // Provide compiler intrinsics for bare-metal
@@ -53,18 +56,23 @@ extern "C" fn eh_personality() {}
 
 // Limine requests
 #[used]
+#[link_section = ".limine_requests"]
 static FRAMEBUFFER_REQUEST: FramebufferRequest = FramebufferRequest::new();
 
 #[used]
+#[link_section = ".limine_requests"]
 static MEMORY_MAP_REQUEST: MemoryMapRequest = MemoryMapRequest::new();
 
 #[used]
+#[link_section = ".limine_requests"]
 static RSDP_REQUEST: RsdpRequest = RsdpRequest::new();
 
 #[used]
+#[link_section = ".limine_requests"]
 static HHDM_REQUEST: HhdmRequest = HhdmRequest::new();
 
 #[used]
+#[link_section = ".limine_requests"]
 static EXECUTABLE_ADDRESS_REQUEST: ExecutableAddressRequest = ExecutableAddressRequest::new();
 
 #[used]
@@ -83,8 +91,13 @@ static _REQUESTS_END: RequestsEndMarker = RequestsEndMarker::new();
 pub extern "C" fn _start() -> ! {
     // Set up boot info before initializing kernel
     let hhdm_offset = HHDM_REQUEST.get_response().expect("no HHDM").offset();
-    let exec = EXECUTABLE_ADDRESS_REQUEST.get_response().expect("no ExecutableAddress");
-    let mmap = MEMORY_MAP_REQUEST.get_response().expect("no MemoryMap").entries();
+    let exec = EXECUTABLE_ADDRESS_REQUEST
+        .get_response()
+        .expect("no ExecutableAddress");
+    let mmap = MEMORY_MAP_REQUEST
+        .get_response()
+        .expect("no MemoryMap")
+        .entries();
     unsafe {
         monarch::boot_info::set(monarch::boot_info::BootInfo {
             hhdm_offset,
@@ -138,9 +151,10 @@ pub extern "C" fn _start() -> ! {
 
     // Get memory map
     if let Some(response) = MEMORY_MAP_REQUEST.get_response() {
-        let _total_memory = response.entries().iter().fold(0u64, |acc, entry| {
-            acc + entry.length
-        });
+        let _total_memory = response
+            .entries()
+            .iter()
+            .fold(0u64, |acc, entry| acc + entry.length);
     }
 
     // Halt
