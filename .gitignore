@@ -5,6 +5,7 @@
 /.deps/limine
 /.agents
 /.codex
+/.idea
 /iso_root
 /kernel.iso
 /kernel.gz
