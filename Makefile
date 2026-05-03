@@ -2,51 +2,59 @@
 
 ARCH ?= x86_64
 LIMINE_VERSION ?= v7.x-binary
+BUILD_DIR ?= .build
+DEPS_DIR ?= .deps
+ISO_ROOT := $(BUILD_DIR)/iso_root
+ISO_IMAGE := $(BUILD_DIR)/kernel.iso
+LIMINE_DIR := $(DEPS_DIR)/limine
 
 build:
 	cargo build --release -Z build-std=core,compiler_builtins,alloc -Z build-std-features=compiler-builtins-mem
 
 limine-bootloader:
-	@if [ ! -d "limine" ]; then \
-		git clone https://github.com/limine-bootloader/limine.git --branch $(LIMINE_VERSION) --depth=1; \
-		cd limine && $(MAKE); \
+	@mkdir -p $(DEPS_DIR)
+	@if [ ! -d "$(LIMINE_DIR)" ]; then \
+		git clone https://github.com/limine-bootloader/limine.git --branch $(LIMINE_VERSION) --depth=1 $(LIMINE_DIR); \
+		cd $(LIMINE_DIR) && $(MAKE); \
 	else \
 		echo "Limine bootloader already present"; \
 	fi
 
 iso: build limine-bootloader
-	@mkdir -p iso_root/boot/limine
-	@mkdir -p iso_root/EFI/BOOT
-	@cp limine.cfg iso_root/
-	@cp limine/limine-bios.sys iso_root/boot/limine/
-	@cp limine/limine-bios-cd.bin iso_root/boot/limine/
-	@cp limine/limine-uefi-cd.bin iso_root/boot/limine/
-	@cp target/x86_64-unknown-none/release/kernel iso_root/boot/kernel
-	@cp limine/BOOTX64.EFI iso_root/EFI/BOOT/
+	@mkdir -p $(ISO_ROOT)/boot/limine
+	@mkdir -p $(ISO_ROOT)/EFI/BOOT
+	@cp limine.cfg $(ISO_ROOT)/
+	@cp $(LIMINE_DIR)/limine-bios.sys $(ISO_ROOT)/boot/limine/
+	@cp $(LIMINE_DIR)/limine-bios-cd.bin $(ISO_ROOT)/boot/limine/
+	@cp $(LIMINE_DIR)/limine-uefi-cd.bin $(ISO_ROOT)/boot/limine/
+	@cp $(BUILD_DIR)/target/x86_64-unknown-none/release/kernel $(ISO_ROOT)/boot/kernel
+	@cp $(LIMINE_DIR)/BOOTX64.EFI $(ISO_ROOT)/EFI/BOOT/
 	@xorriso -as mkisofs \
 		-b boot/limine/limine-bios-cd.bin \
 		-no-emul-boot -boot-load-size 4 -boot-info-table \
 		--efi-boot boot/limine/limine-uefi-cd.bin \
 		-efi-boot-part --efi-boot-image --protective-msdos-label \
-		iso_root -o kernel.iso
-	@./limine/limine bios-install kernel.iso
-	@echo "ISO built successfully: kernel.iso"
+		$(ISO_ROOT) -o $(ISO_IMAGE)
+	@$(LIMINE_DIR)/limine bios-install $(ISO_IMAGE)
+	@echo "ISO built successfully: $(ISO_IMAGE)"
 
 run: iso
 	@echo "Running in QEMU (requires QEMU to be installed)"
-	qemu-system-x86_64 -cdrom kernel.iso \
+	qemu-system-x86_64 -cdrom $(ISO_IMAGE) \
 		-m 512M \
+		-cpu max \
 		-serial stdio \
 		-display none
 
 run-gui: iso
-	qemu-system-x86_64 -cdrom kernel.iso \
+	qemu-system-x86_64 -cdrom $(ISO_IMAGE) \
 		-m 512M \
+		-cpu max \
 		-serial stdio
 
 clean:
 	cargo clean
-	rm -rf target/ iso_root/ kernel.iso limine/
+	rm -rf target/ $(BUILD_DIR)/ $(DEPS_DIR)/
 
 test:
 	cargo test
@@ -66,6 +74,7 @@ fmt-check:
 help:
 	@echo "Available targets:"
 	@echo "  build       - Build the kernel"
+	@echo "  iso         - Build bootable ISO at $(ISO_IMAGE)"
 	@echo "  run         - Build and run in QEMU (headless)"
 	@echo "  run-gui     - Build and run in QEMU (with display)"
 	@echo "  clean       - Clean build artifacts"

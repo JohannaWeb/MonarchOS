@@ -1,43 +1,66 @@
 /* Kernel linker script for x86_64 */
 
+OUTPUT_FORMAT(elf64-x86-64)
 ENTRY(_start)
 
-SECTIONS {
-    . = 0xFFFFFFFF80000000;
+PHDRS
+{
+    text    PT_LOAD    FLAGS((1 << 0) | (1 << 2)) ; /* Execute + Read */
+    rodata  PT_LOAD    FLAGS((1 << 2)) ; /* Read only */
+    data    PT_LOAD    FLAGS((1 << 1) | (1 << 2)) ; /* Write + Read */
+    dynamic PT_DYNAMIC FLAGS((1 << 1) | (1 << 2)) ; /* Dynamic PHDR for relocations */
+}
+
+SECTIONS
+{
+    . = 0xffffffff80000000;
     __kernel_start = .;
 
-    .limine_requests_start ALIGN(8) : AT(ADDR(.limine_requests_start) - 0xFFFFFFFF80000000) {
-        KEEP(*(.limine_requests_start))
-    }
+    . = ALIGN(4096);
 
-    .limine_requests ALIGN(8) : AT(ADDR(.limine_requests) - 0xFFFFFFFF80000000) {
-        KEEP(*(.limine_requests))
-    }
-
-    .limine_requests_end ALIGN(8) : AT(ADDR(.limine_requests_end) - 0xFFFFFFFF80000000) {
-        KEEP(*(.limine_requests_end))
-    }
-
-    .text : AT(ADDR(.text) - 0xFFFFFFFF80000000) {
+    .text : {
         *(.text .text.*)
-        . = ALIGN(4K);
-    }
+    } :text
 
-    .rodata : AT(ADDR(.rodata) - 0xFFFFFFFF80000000) {
+    . = ALIGN(4096);
+
+    .rodata : {
         *(.rodata .rodata.*)
-        . = ALIGN(4K);
-    }
+    } :rodata
 
-    .data : AT(ADDR(.data) - 0xFFFFFFFF80000000) {
+    /* Dynamic linking sections required for PIE */
+    .hash : { *(.hash) } :rodata
+    .gnu.hash : { *(.gnu.hash) } :rodata
+    .dynsym : { *(.dynsym) } :rodata
+    .dynstr : { *(.dynstr) } :rodata
+    .rela.dyn : { *(.rela.dyn) } :rodata
+    .rela.plt : { *(.rela.plt) } :rodata
+
+    . = ALIGN(4096);
+
+    .data : {
         *(.data .data.*)
-        . = ALIGN(4K);
-    }
+        *(.got .got.*)
+        . = ALIGN(8);
+        KEEP(*(.limine_requests_start))
+        KEEP(*(.limine_requests))
+        KEEP(*(.limine_requests_end))
+    } :data
 
-    .bss : AT(ADDR(.bss) - 0xFFFFFFFF80000000) {
+    .dynamic : {
+        *(.dynamic)
+    } :data :dynamic
+
+    .bss : {
         *(.bss .bss.*)
         *(COMMON)
-        . = ALIGN(4K);
-    }
+    } :data
 
-    __kernel_end = ALIGN(4K);
+    . = ALIGN(4096);
+    __kernel_end = .;
+
+    /DISCARD/ : {
+        *(.eh_frame*)
+        *(.note .note.*)
+    }
 }

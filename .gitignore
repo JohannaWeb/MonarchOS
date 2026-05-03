@@ -1,1 +1,13 @@
 /target
+/.build
+/build
+/.deps
+/.deps/limine
+/.agents
+/.codex
+/iso_root
+/kernel.iso
+/kernel.gz
+/disk.qcow2
+/limine
+/limine/

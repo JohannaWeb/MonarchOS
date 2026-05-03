@@ -47,7 +47,7 @@ This runs QEMU with a graphical window so you can see the framebuffer output dir
 If you prefer to run QEMU manually:
 
 ```bash
-qemu-system-x86_64 -kernel target/x86_64-unknown-none/release/kernel \
+qemu-system-x86_64 -kernel .build/target/x86_64-unknown-none/release/kernel \
     -m 512M \
     -serial stdio \
     -display none
@@ -61,7 +61,12 @@ make build
 
 This builds the kernel without running it. The binary is located at:
 ```
-target/x86_64-unknown-none/release/kernel
+.build/target/x86_64-unknown-none/release/kernel
+```
+
+The bootable ISO is written to:
+```
+.build/kernel.iso
 ```
 
 ## What to Expect
@@ -85,7 +90,7 @@ When you run the kernel, you should see:
 
 QEMU is not installed. Install it using the instructions above for your platform.
 
-### "No such file or directory: target/x86_64-unknown-none/release/kernel"
+### "No such file or directory: .build/target/x86_64-unknown-none/release/kernel"
 
 The kernel hasn't been built yet. Run `make build` first, or just use `make run` which builds automatically.
 
@@ -131,11 +136,11 @@ You can add more QEMU options if needed:
 
 ```bash
 # With debugging enabled
-qemu-system-x86_64 -kernel target/x86_64-unknown-none/release/kernel \
+qemu-system-x86_64 -kernel .build/target/x86_64-unknown-none/release/kernel \
     -m 512M -serial stdio -display none -d cpu_reset,guest_errors
 
 # With GDB debugging
-qemu-system-x86_64 -kernel target/x86_64-unknown-none/release/kernel \
+qemu-system-x86_64 -kernel .build/target/x86_64-unknown-none/release/kernel \
     -m 512M -serial stdio -s -S
 ```
 

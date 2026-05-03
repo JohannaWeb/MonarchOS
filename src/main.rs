@@ -107,8 +107,32 @@ pub extern "C" fn _start() -> ! {
         });
     }
 
+    // Get framebuffer for early output and initialize terminal first
+    let mut terminal_opt = None;
+    if let Some(response) = FRAMEBUFFER_REQUEST.get_response() {
+        if let Some(fb) = response.framebuffers().next() {
+            let addr = fb.addr() as *mut u32;
+            let width = fb.width() as usize;
+            let height = fb.height() as usize;
+            let pitch = fb.pitch() as usize;
+
+            let mut terminal = monarch::terminal::Terminal::new(addr, width, height, pitch, 2);
+            terminal.clear();
+            terminal.print("Terminal initialized.\n");
+            terminal_opt = Some(terminal);
+        }
+    }
+
+    if let Some(term) = &mut terminal_opt {
+        term.print("Initializing CPU (GDT, IDT, exception handling)...\n");
+    }
+
     // Initialize CPU (GDT, IDT, exception handling)
     monarch::init();
+
+    if let Some(term) = &mut terminal_opt {
+        term.print("Testing heap allocator...\n");
+    }
 
     // Test heap allocator
     {
@@ -128,25 +152,9 @@ pub extern "C" fn _start() -> ! {
         let _first = vec[0];
     }
 
-    // Get framebuffer for early output
-    if let Some(response) = FRAMEBUFFER_REQUEST.get_response() {
-        if let Some(fb) = response.framebuffers().next() {
-            // Simple early output
-            let addr = fb.addr() as *mut u32;
-            let width = fb.width() as usize;
-            let height = fb.height() as usize;
-            let pitch = fb.pitch() as usize;
-
-            // Clear framebuffer to black
-            for y in 0..height {
-                for x in 0..width {
-                    let pixel_offset = y * (pitch / 4) + x;
-                    unsafe {
-                        addr.add(pixel_offset).write_volatile(0xFF_000000);
-                    }
-                }
-            }
-        }
+    if let Some(mut term) = terminal_opt {
+        term.print("Starting shell...\n");
+        term.run_shell();
     }
 
     // Get memory map

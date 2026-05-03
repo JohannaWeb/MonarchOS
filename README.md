@@ -65,6 +65,7 @@ cargo build --release
 
 ```bash
 make build       # Compile kernel
+make iso         # Build bootable ISO at .build/kernel.iso
 make run         # Run in QEMU headless
 make run-gui     # Run in QEMU with display
 make check       # Check without compiling
@@ -140,6 +141,9 @@ cargo watch
 # Generate documentation
 cargo doc --no-deps --open
 ```
+
+For QEMU details and troubleshooting, see `docs/RUNNING.md`.
+For the review-driven foundation roadmap, see `docs/IMPLEMENTATION_PLAN.md`.
 
 ## Architecture Overview
 
